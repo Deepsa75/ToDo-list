@@ -1,0 +1,63 @@
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+
+const TodoList = () => {
+    const [todos, setTodos] = useState([]);
+    const [newTodo, setNewTodo] = useState('');
+
+    useEffect(() => {
+        axios.get('/api/todos')
+            .then(response => {
+                setTodos(response.data);
+            })
+            .catch(error => {
+                console.error('There was an error fetching the todos!', error);
+            });
+    }, []);
+
+    const handleSubmit = (event) => {
+        event.preventDefault();
+        axios.post('/api/todos', { title: newTodo })
+            .then(response => {
+                setTodos([...todos, response.data]);
+                setNewTodo('');
+            })
+            .catch(error => {
+                console.error('There was an error creating the todo!', error);
+            });
+    };
+
+    const handleDelete = (id) => {
+        axios.delete(`/api/todos/${id}`)
+            .then(() => {
+                setTodos(todos.filter(todo => todo.id !== id));
+            })
+            .catch(error => {
+                console.error('There was an error deleting the todo!', error);
+            });
+    };
+
+    return (
+        <div>
+            <ul>
+                {todos.map(todo => (
+                    <li key={todo.id} className={todo.completed ? 'completed' : ''}>
+                        {todo.title}
+                        <button onClick={() => handleDelete(todo.id)}>Delete</button>
+                    </li>
+                ))}
+            </ul>
+            <form onSubmit={handleSubmit}>
+                <input 
+                    type="text" 
+                    value={newTodo} 
+                    onChange={(e) => setNewTodo(e.target.value)} 
+                    placeholder="Add a new todo"
+                />
+                <input type="submit" value="Add Todo" />
+            </form>
+        </div>
+    );
+};
+
+export default TodoList;
